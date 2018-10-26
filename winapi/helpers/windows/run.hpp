@@ -16,6 +16,13 @@ namespace helpers::windows {
             message.wParam = wp;
             message.lParam = lp;
             if (global != nullptr) { global(); }
+            else {
+                switch (m) {
+                case WM_DESTROY:
+                    PostQuitMessage(0);
+                    break;
+                }
+            }
             return DefWindowProc(h, m, wp, lp);
         }
 

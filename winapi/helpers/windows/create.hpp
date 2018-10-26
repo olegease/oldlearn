@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include "style.hpp"
 #include "run.hpp"
+#include "single.hpp"
 #include <string>
 namespace helpers::windows {
     struct display_rect
