@@ -1,4 +1,4 @@
-#include "../../helpers/windows/create.hpp"
+#include "../../helpers/windows/window.hpp"
 #include <iostream>
 #include <sstream>
 namespace win = helpers::windows;
@@ -7,7 +7,7 @@ int main()
 {
     try {
         win::single sng(L"helper_single_creation.cpp");
-        win::create();
+        win::window wnd;
         win::run{}();
     }
     catch (const std::exception& e) {

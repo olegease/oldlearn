@@ -4,8 +4,15 @@
 #include "style.hpp"
 #include "run.hpp"
 #include "single.hpp"
+#include <stdexcept>
 #include <string>
 namespace helpers::windows {
+    namespace exception {
+        struct register_class : std::runtime_error { register_class(const char* msg) : std::runtime_error(msg) { } };
+        struct create_window : std::runtime_error { create_window(const char* msg) : std::runtime_error(msg) { } };
+    }
+
+    struct display_rect;
     struct display_rect
     {
         int leftXpos;
@@ -34,12 +41,10 @@ namespace helpers::windows {
         wclass.lpszClassName = wclassname.c_str();
         wclass.hIconSm = NULL;
         ATOM rclassAtom = RegisterClassEx(&wclass);
-        if (!rclassAtom) {
-            //display_error_line("RegisterClassEx fail.");
-        }
+        if (!rclassAtom) throw exception::register_class((std::string{"RegisterClassEx ATOM return false, errorcode: "} + std::to_string(GetLastError())).c_str());
         HWND wid = CreateWindowEx(
             style.extended,
-            wclassname.c_str(),
+            wclass.lpszClassName,
             L"Window Title",
             style.window,
             rect.leftXpos,
@@ -51,6 +56,7 @@ namespace helpers::windows {
             wclass.hInstance,
             NULL
         );
+        if (!wid) throw exception::create_window((std::string{"CreateWindowEx return nullptr, errorcode: "} + std::to_string(GetLastError())).c_str());
         bool prevIsVisible = ShowWindow(wid, SW_SHOW);
         return wid;
     }

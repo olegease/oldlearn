@@ -1,4 +1,4 @@
-#include "../../helpers/windows/create.hpp"
+#include "../../helpers/windows/window.hpp"
 
 #include <iostream>
 
@@ -21,7 +21,7 @@ void f()
 int main()
 {
     hlpwin::run::assign(f);
-    HWND id = hlpwin::create();
+    hlpwin::window wnd;
     hlpwin::run{}();
     std::cin.get();
 }
