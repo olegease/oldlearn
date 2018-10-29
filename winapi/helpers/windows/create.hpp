@@ -57,7 +57,7 @@ namespace helpers::windows {
             NULL
         );
         if (!wid) throw exception::create_window((std::string{"CreateWindowEx return nullptr, errorcode: "} + std::to_string(GetLastError())).c_str());
-        bool prevIsVisible = ShowWindow(wid, SW_SHOW);
+        if (run::global == nullptr) ShowWindow(wid, SW_SHOW);
         return wid;
     }
 }

@@ -29,6 +29,16 @@ namespace helpers::windows {
     {
         style_default() : style_base(
             CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+            WS_TILEDWINDOW | WS_VISIBLE,
+            WS_EX_LEFT
+        )
+        { }
+    };
+
+    struct style_graphic : public style_base
+    {
+        style_graphic() : style_base(
+            CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
             WS_TILEDWINDOW,
             WS_EX_LEFT
         )
