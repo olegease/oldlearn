@@ -39,9 +39,20 @@ namespace helpers::windows {
     {
         style_graphic() : style_base(
             CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
-            WS_TILEDWINDOW,
+            WS_TILEDWINDOW | WS_CLIPCHILDREN,
             WS_EX_LEFT
         )
         { }
+    };
+
+    struct style_child : public style_base
+    {
+        style_child() : style_base(
+            CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+            WS_CHILD,
+            WS_EX_LEFT
+        )
+        { }
+
     };
 }
