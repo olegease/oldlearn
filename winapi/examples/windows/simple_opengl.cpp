@@ -1,12 +1,12 @@
 #include "../../helpers/windows/window.hpp"
-#include "../../helpers/opengl/context.hpp"
+//#include "../../helpers/opengl/context.hpp"
 
 #include <iostream>
 #include <gl/GL.h>
 #include <gl/GLU.h>
 
 namespace win = helpers::windows;
-namespace gl = helpers::opengl;
+//namespace gl = helpers::opengl;
 
 void events()
 {
@@ -45,8 +45,23 @@ int main()
     win::run::assign(events);
     win::single sng(L"helper_simple_opengl.cpp");
     win::window wnd(win::style_graphic{});
-    gl::context context(wnd, gl::format_default{});
-    context.make_current();
+    //gl::context context(wnd, gl::format_default{});
+
+    PIXELFORMATDESCRIPTOR pfd;
+    pfd.nSize = sizeof(pfd);
+    pfd.nVersion = 1;
+    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+    pfd.iPixelType = PFD_TYPE_RGBA;
+    pfd.cColorBits = 32;
+    int pf = ChoosePixelFormat(wnd, &pfd);
+    SetPixelFormat(wnd, pf, &pfd);
+    DescribePixelFormat(wnd, pf, sizeof(pfd), &pfd);
+    HGLRC rc = wglCreateContext(wnd);
+    wglMakeCurrent(wnd, rc);
     wnd.show();
     win::run{}();
+
+    wglMakeCurrent(nullptr, nullptr);
+    wglDeleteContext(rc);
+    ReleaseDC(wnd, wnd);
 }
