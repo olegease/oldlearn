@@ -11,7 +11,7 @@ namespace helpers::windows {
         static f* global;
         static MSG message;
         static std::map< HWND, f* > window;
-        static std::map< HWND, helpers::opengl::context* > context;
+        static std::map< HWND, helpers::opengl::context_base* > context;
 
         static LRESULT WINAPI event_handler(HWND h, UINT m, WPARAM wp, LPARAM lp)
         {
@@ -43,7 +43,7 @@ namespace helpers::windows {
             }
         }
 
-        static void assign(helpers::opengl::context* c)
+        static void assign(helpers::opengl::context_base* c)
         {
             context[*c] = c;
         }
@@ -62,5 +62,5 @@ namespace helpers::windows {
     run::f* run::global = nullptr;
     MSG run::message;
     std::map< HWND, run::f* > run::window;
-    std::map< HWND, helpers::opengl::context* > run::context;
+    std::map< HWND, helpers::opengl::context_base* > run::context;
 }

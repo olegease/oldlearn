@@ -17,6 +17,7 @@ namespace helpers::windows {
         operator HDC() { return GetDC(hwnd); }
         void show() { ShowWindow(hwnd, SW_SHOW); }
         void hide() { ShowWindow(hwnd, SW_HIDE); }
+        void title(const wchar_t* str) { SetWindowTextW(hwnd, str); }
     private:
         HWND hwnd;
     };
