@@ -41,10 +41,10 @@ namespace helpers::opengl {
     struct context_base
     {
         context_base(HDC dc, HGLRC rc) : dc(dc), rc(rc) { }
-        operator HWND() { return WindowFromDC(dc); }
-        operator HDC() { return dc; }
-        operator HGLRC() { return rc; }
-        void make_current()
+        operator HWND() const { return WindowFromDC(dc); }
+        operator HDC() const { return dc; }
+        operator HGLRC() const { return rc; }
+        void make_current() const
         {
             if (wglMakeCurrent(*this, *this) == FALSE) throw exception::get_last_error("wglMakeCurrent return false");
         }
@@ -61,7 +61,7 @@ namespace helpers::opengl {
         }
     };
 
-    HGLRC create_core(context& dummy, HDC dc, format_core f)
+    HGLRC create_core(const context& dummy, HDC dc, format_core f)
     {
         //PIXELFORMATDESCRIPTOR opfd = format{format_default{}};
         wglMakeCurrent(dummy, dummy);
@@ -87,6 +87,6 @@ namespace helpers::opengl {
 
     struct context_core : context_base
     {
-        context_core(context& dummy, HDC dc, format_core f) : context_base(dc, dummy) { rc = create_core(dummy, dc, f); }
+        context_core(const context& dummy, HDC dc, format_core f) : context_base(dc, dummy) { rc = create_core(dummy, dc, f); }
     };
 }
