@@ -20,7 +20,7 @@ struct array_nano_duration
 {
     using clock = std::chrono::high_resolution_clock;
     int index;
-    std::array< T, 2000 > data;
+    std::array< T, 10 > data;
     array_nano_duration() : index(0)
     {
         for (int key = 0; key < data.size(); ++key) {
@@ -35,7 +35,7 @@ struct array_nano_duration
         static constexpr T values[] = {
             0, 1, 5, 10, 50, 100, 200, 500, 750, 1'000, 5'000, 7'500, 10'000, 15'000, 20'000, 50'000, 100'000, 250'000, 500'000, 750'000
         };
-        return 500 * key;
+        return values[key];
     }
 
     void cout()
@@ -71,14 +71,13 @@ struct array_nano_duration
 
 void call()
 {
-    std::this_thread::sleep_for(std::chrono::nanoseconds(5));
-    //std::cout << " ";
+    //std::this_thread::sleep_for(std::chrono::nanoseconds(33'000'000));
+    std::cout << " ";
 }
 
 void test(Call::f* func = call)
 {
     using clock = std::chrono::high_resolution_clock;
-    array_nano_duration< long long > sleep_helper;
     // global while to check 1 second duration is correct, in <5% error [975-1025]ms is correct
     while (true) {
         auto global_start = clock::now();
@@ -96,17 +95,16 @@ void test(Call::f* func = call)
             ticks++;
             auto expected_duration = (ticks * 1'000'000) - (ticks * 25'000);
             while (expected_duration > global_func_duration) {
-                // TODO find best way to sleep, now it's too heavy
                 auto sleep_start = clock::now();
                 rounding_cycles++;
                 std::this_thread::sleep_for(
                     std::chrono::nanoseconds(
-                        sleep_helper.sleep_for(1'000'000 - func_duration)
+                        // the simpler and best way for now but not good for some cases
+                        expected_duration - global_func_duration
                     )
                 );
                 auto sleep_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - sleep_start).count();
                 global_func_duration += sleep_duration;
-                sleep_helper.update_index(sleep_duration);
             }
         }
         auto global_end = clock::now();
@@ -114,7 +112,7 @@ void test(Call::f* func = call)
         std::cout << "global duration is: " << global_duration / 1'000'000 << " milliseconds." << std::endl;
         std::cout << "func duration is: " << global_func_duration / 1'000'000 << " milliseconds." << std::endl;
         std::cout << "ticks: " << ticks << std::endl;
-        std::cout << "avg rounding cycles: " << rounding_cycles / 1000 << std::endl;
+        std::cout << "avg rounding cycles: " << rounding_cycles / 1000.0 << std::endl;
         if (global_duration < 975'000'000 || global_duration > 1'025'000'000) throw std::runtime_error("duration check failed");
         //break;
     }
