@@ -72,7 +72,8 @@ struct array_nano_duration
 void call()
 {
     //std::this_thread::sleep_for(std::chrono::nanoseconds(33'000'000));
-    std::cout << " ";
+    //std::cout << " ";
+    //std::cout << "call" << std::endl;
 }
 
 void test(Call::f* func = call)
@@ -118,14 +119,84 @@ void test(Call::f* func = call)
     }
 }
 
+struct MilliTimer
+{
+    using fptr = void();
+    MilliTimer(fptr* function_to_call, int call_every_millisconds) : call(function_to_call), ms(call_every_millisconds) { }
+    void start()
+    {
+        call_thread = std::thread(&MilliTimer::call_process, this);
+    }
+    void join()
+    {
+        if (call_thread.joinable()) call_thread.join();
+    }
+private:
+    fptr* call;
+    int ms;
+    int fps;
+    std::thread call_thread;
+    void call_process()
+    {
+        using clock = std::chrono::high_resolution_clock;
+        constexpr auto min_dynamic_tick_error = 1;
+        constexpr auto max_dynamic_tick_error = 65536;
+        auto dynamic_tick_error = min_dynamic_tick_error;
+        auto max_ticks = 1000 / ms;
+        constexpr auto ns_in_ms = 1'000'000;
+        constexpr auto ns_in_sec = 1'000'000'000;
+        // TODO: find bug/problem with max_dynamic_tick_error go only to max when call function is too fast
+        // problem happens in condion: empty function to call and timer ms set to > 8
+        while (true) {
+            auto check_start = clock::now();
+            auto overall_call_duration = 0LL;
+            auto ticks = 0;
+            while (true) {
+                if ((ticks == max_ticks) || (overall_call_duration > ns_in_sec)) break;
+                auto call_start = clock::now();
+                call();
+                ticks++;
+                auto tick_call_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - call_start).count();
+                overall_call_duration += tick_call_duration;
+                auto expected_duration = (ticks * ms * ns_in_ms) - (ticks * ms * dynamic_tick_error);
+                while (expected_duration > overall_call_duration) {
+                    auto sleep_start = clock::now();
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(expected_duration - overall_call_duration));
+                    auto sleep_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - sleep_start).count();
+                    overall_call_duration += sleep_duration;
+                }
+            }
+            auto check_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - check_start).count();
+            std::cout << "check duration: " << check_duration / ns_in_ms << "ms" << std::endl;
+            std::cout << "overall call duration: " << overall_call_duration / ns_in_ms << "ms" << std::endl;
+            std::cout << "ticks: " << ticks << std::endl;
+            std::cout << "dynamic tick error: " << dynamic_tick_error << "ns" << std::endl;
+            auto diff = dynamic_tick_error * 1'000;
+            if (check_duration < ns_in_sec - diff || check_duration > ns_in_sec + diff) {
+                if (dynamic_tick_error < max_dynamic_tick_error) dynamic_tick_error *= 2;
+            }
+            else {
+                if (dynamic_tick_error > min_dynamic_tick_error) dynamic_tick_error /= 2;
+            }
+        }
+    }
+};
+
 int main()
 {
     std::ios::sync_with_stdio(false);
+    MilliTimer mt(call, 33);
     try {
-        test();
+        mt.start();
+        for (int i = 0; i < 4; ++i) {
+            std::cout << "that my call" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
-    catch (const std::exception& e) {
+    catch (std::exception& e) {
         std::cout << e.what() << std::endl;
     }
+    mt.join();
+    
     std::cin.get();
 }
