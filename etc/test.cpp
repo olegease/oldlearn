@@ -71,7 +71,7 @@ struct array_nano_duration
 
 void call()
 {
-    //std::this_thread::sleep_for(std::chrono::nanoseconds(33'000'000));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(16'000'000));
     //std::cout << " ";
     //std::cout << "call" << std::endl;
 }
@@ -145,14 +145,13 @@ private:
         auto max_ticks = 1000 / ms;
         constexpr auto ns_in_ms = 1'000'000;
         constexpr auto ns_in_sec = 1'000'000'000;
-        // TODO: find bug/problem with max_dynamic_tick_error go only to max when call function is too fast
-        // problem happens in condion: empty function to call and timer ms set to > 8
+        // TODO: tests different input data to further improvements
         while (true) {
             auto check_start = clock::now();
             auto overall_call_duration = 0LL;
             auto ticks = 0;
             while (true) {
-                if ((ticks == max_ticks) || (overall_call_duration > ns_in_sec)) break;
+                if ((ticks == max_ticks) || (overall_call_duration > ns_in_sec - 1'000 * (1'000 - ticks))) break;
                 auto call_start = clock::now();
                 call();
                 ticks++;
@@ -171,7 +170,7 @@ private:
             std::cout << "overall call duration: " << overall_call_duration / ns_in_ms << "ms" << std::endl;
             std::cout << "ticks: " << ticks << std::endl;
             std::cout << "dynamic tick error: " << dynamic_tick_error << "ns" << std::endl;
-            auto diff = dynamic_tick_error * 1'000;
+            auto diff = dynamic_tick_error * 1'000 * (1000 - ticks);
             if (check_duration < ns_in_sec - diff || check_duration > ns_in_sec + diff) {
                 if (dynamic_tick_error < max_dynamic_tick_error) dynamic_tick_error *= 2;
             }
@@ -185,7 +184,7 @@ private:
 int main()
 {
     std::ios::sync_with_stdio(false);
-    MilliTimer mt(call, 33);
+    MilliTimer mt(call, 16);
     try {
         mt.start();
         for (int i = 0; i < 4; ++i) {
