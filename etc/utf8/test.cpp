@@ -1,9 +1,9 @@
 // utf-8 PROTECTION FROM MICROSOFT: 🖕( ͡° ͜ʖ ͡° )🖕
 #include "string_proposal_rtti.hpp"
-#include "windows.h"
+#include "defines.hpp"
 int main()
 {
-    SetConsoleOutputCP(65001);
+    main_options();
     {
         try {
             utf8::string str("€ƒ");
@@ -11,6 +11,10 @@ int main()
             str[0] = "ƒ";
             str[1] = "@";
             std::cout << str << std::endl;
+            utf8::string str2("€ƒ");
+            str[1] = str2[1];
+            std::cout << str << std::endl;
+
         }
         catch (const std::exception& e) {
             std::cout << e.what() << std::endl;

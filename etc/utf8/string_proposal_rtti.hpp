@@ -27,6 +27,13 @@ namespace utf8 {
             *code_unit[1] = cstr[1];
             return *this;
         }
+
+        proxy_code_point& operator=(const proxy_code_point& pcp)
+        {
+            *code_unit[0] = *pcp.code_unit[0];
+            *code_unit[1] = *pcp.code_unit[1];
+            return *this;
+        }
     };
 
     struct virtual_string_data
