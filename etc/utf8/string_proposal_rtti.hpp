@@ -4,7 +4,7 @@
 
 namespace utf8 {
 
-    constexpr uint8_t DIFF_BYTES = 0;
+    constexpr uint8_t DIFF_BYTES = 0; // not implemented yet
     constexpr uint8_t ALL_1_BYTE = 1;
     constexpr uint8_t ALL_2_BYTE = 2;
     constexpr uint8_t ALL_3_BYTE = 3;
@@ -12,9 +12,14 @@ namespace utf8 {
 
     constexpr char EMPTY = '\xFF';
 
+    char EMPTY_CHAR = '\xFF';
+    char* const EMPTY_POINTER = &EMPTY_CHAR;
+
+    struct virtual_string_data;
+
     struct proxy_code_point
     {
-        static constexpr int MODE = 4;
+        static constexpr int MODE = ALL_4_BYTE;
         using pchar = char*;
         pchar code_unit[MODE];
         proxy_code_point(char* cstr)
@@ -25,12 +30,15 @@ namespace utf8 {
                 ++cstr;
                 ++i;
             }
-
-            std::cout << i << std::endl;
-            //for (int i = 0; i < MODE && *cstr != '\0'; ++cstr, ++i) code_unit[i] = cstr;
-            //code_unit[0] = cstr;
-            //code_unit[1] = &cstr[1];
+            while (i < MODE) {
+                code_unit[i] = EMPTY_POINTER;
+                ++i;
+            }
         }
+
+        proxy_code_point(virtual_string_data* pdata, int start_index);
+
+
         proxy_code_point& operator=(const char* cstr)
         {
             for (int i = 0; i < MODE && *cstr != '\0'; ++cstr, ++i) *code_unit[i] = *cstr;
@@ -45,7 +53,9 @@ namespace utf8 {
 
         friend std::ostream& operator<<(std::ostream& os, const proxy_code_point& rhs)
         {
-            os.write(*rhs.code_unit, MODE);
+            int i = 0;
+            while (rhs.code_unit[i] != EMPTY_POINTER && i < MODE) ++i;
+            os.write(*rhs.code_unit, i);
             return os;
         }
 
@@ -64,6 +74,8 @@ namespace utf8 {
         virtual ~virtual_string_data() { delete[] data; }
 
         virtual proxy_code_point operator[](int key) = 0;
+
+        virtual int mode() const  = 0;
     };
 
     template< int MODE >
@@ -75,35 +87,35 @@ namespace utf8 {
 
         virtual proxy_code_point operator[](int key)
         {
-            proxy_code_point cpc(&data[key * MODE]);
-            for (int i = MODE; i < 4; ++i) cpc[i] = EMPTY;
-            return &data[key * MODE];
+            proxy_code_point cpc(this, key * MODE);
+            return cpc;
         }
+
+        virtual int mode() const { return MODE; }
     };
 
     struct base_string
     {
         virtual_string_data* pdata;
         base_string() : pdata(nullptr) { }
-        base_string(const char* cstr) //: pdata(new base_string_data< 2 >(strlen(cstr))) 
+        base_string(const char* cstr) //: pdata(new base_string_data< 2 >(strlen(cstr)))
         {
             // TODO do it correctly work with empty strings ""
             int len = 0;
             const char* s = cstr;
-            //const char* const cs = s;
             int all_bytes = process_codepoint(s);
-            //std::cout << all_bytes << std::endl;
-            //throw std::exception("wtd");
+
             if (!all_bytes) throw std::runtime_error("utf8: error code point");
             s += all_bytes;
             len++;
             while (*s != '\0') {
                 len++;
                 int bytes = process_codepoint(s);
+                if (bytes != all_bytes) throw std::runtime_error("utf8: error code point");
                 s += bytes;
             }
 
-            // TODO make it constexpr
+            // TODO make it constexpr?
             //if (!all_bytes) pdata = new base_string_data< UTF8_DIFF_BYTES >(len);
             if (all_bytes == 1) pdata = new base_string_data< ALL_1_BYTE >(len);
             else if (all_bytes == 2) pdata = new base_string_data< ALL_2_BYTE >(len);
@@ -130,7 +142,7 @@ namespace utf8 {
     struct string
     {
         base_string str;
-        string(const char* cstr) : str(cstr) { for (int i = 0; i < str.pdata->sz - 1; ++cstr, ++i) str.pdata->data[i] = *cstr; }
+        string(const char* cstr) : str(cstr) { for (int i = 0; i < str.pdata->sz; ++cstr, ++i) str.pdata->data[i] = *cstr; }
 
         friend std::ostream& operator<<(std::ostream& os, const string& rhs)
         {
@@ -141,6 +153,16 @@ namespace utf8 {
         proxy_code_point operator[](int k)
         {
             return str.pdata->operator[](k);
+        }
+
+        proxy_code_point operator[](int k) const
+        {
+            return str.pdata->operator[](k);
+        }
+
+        int mode() const
+        {
+            return str.pdata->mode();
         }
 
         std::size_t size() const
@@ -154,5 +176,18 @@ namespace utf8 {
         }
     };
 
+
+    proxy_code_point::proxy_code_point(virtual_string_data* pdata, int start_index)
+    {
+        int i = 0;
+        while (i < pdata->mode()) {
+            code_unit[i] = &(pdata->data[start_index + i]);
+            ++i;
+        }
+        while (i < MODE) {
+            code_unit[i] = EMPTY_POINTER;
+            ++i;
+        }
+    }
 
 }
