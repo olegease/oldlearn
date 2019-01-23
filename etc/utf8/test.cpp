@@ -1,4 +1,3 @@
-// utf-8 PROTECTION FROM MICROSOFT: 🖕( ͡° ͜ʖ ͡° )🖕
 #include "string_proposal_rtti.hpp"
 #include "defines.hpp"
 int main()
@@ -6,15 +5,9 @@ int main()
     main_options();
     {
         try {
-            utf8::string str("€ƒ");
-            std::cout << str << std::endl;
-            str[0] = "ƒ";
-            str[1] = "@";
-            std::cout << str << std::endl;
-            utf8::string str2("€ƒ");
-            str[1] = str2[1];
-            std::cout << str << std::endl;
-
+            // test creating for 1, 2, 3, 4 byte string with 1 char, and cout it
+            utf8::string str("\x24\x24\x24\x24");
+            std::cout << str << " -> size: " << str.size() << ", length: " << str.length() << ", first char:" << str[0] << std::endl;
         }
         catch (const std::exception& e) {
             std::cout << e.what() << std::endl;
