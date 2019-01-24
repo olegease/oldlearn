@@ -1,5 +1,5 @@
-#include "string_proposal_rtti.hpp"
 #include "defines.hpp"
+#include "string_proposal_rtti/string.hpp"
 #include <string>
 
 void print_test_utf8string(const utf8::string& str)
